@@ -22,31 +22,30 @@ class PeoplesSpider(scrapy.Spider):
         """
         scrape article links and next page
         """
-        while self.page > 1:
-            page_info = response.css('article')
+        page_info = response.css('article')
 
-            for info in page_info:
+        for info in page_info:
+            link = info.css('a::attr(href)').get()
+            # get date and validate time range
+            # Split the URL by '/' and get the date parts from the 4th index
+            date_parts = link.split('/')[4:7]
+            # Join the date parts with '-' separator
+            article_date = '-'.join(date_parts)
+            if article_date > self.end_date:
+                continue
+            elif article_date >= self.start_date and article_date <= self.end_date:
+                print('article date', article_date)
                 link = info.css('a::attr(href)').get()
-                # get date and validate time range
-                # Split the URL by '/' and get the date parts from the 4th index
-                date_parts = link.split('/')[4:7]
-                # Join the date parts with '-' separator
-                article_date = '-'.join(date_parts)
-                if article_date > self.end_date:
-                    continue
-                elif article_date >= self.start_date and article_date <= self.end_date:
-                    print('article date', article_date)
-                    link = info.css('a::attr(href)').get()
-                    yield response.follow(link, callback=self.parse_article)
-                else:
-                    print('break')
-                    break
+                yield response.follow(link, callback=self.parse_article)
+            else:
+                print('break')
+                break
 
             # next_page = response.css('span.pages a::attr(href)').get()\
-            self.page -= 1
-            next_page = 'https://www.japantimes.co.jp/news_category/world/page/' + str(self.page) + '/'
-            print('next link', next_page)
-            yield response.follow(next_page, callback=self.parse)
+        self.page -= 1
+        next_page = 'https://www.japantimes.co.jp/news_category/world/page/' + str(self.page) + '/'
+        print('next link', next_page)
+        yield response.follow(next_page, callback=self.parse)
 
     def parse_article(self, response):
         """
@@ -56,7 +55,12 @@ class PeoplesSpider(scrapy.Spider):
             etext = response.css(query).getall()
             content = ""
             for line in etext:
-                content += line.strip()
+                n_line = line.strip()
+                end_line = "This could be due to a conflict with your ad-blocking or security software."
+                if n_line in end_line:
+                    break
+                content += n_line
+            print('content', content)
             return content
 
         yield {
