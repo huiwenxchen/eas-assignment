@@ -62,10 +62,14 @@ class PeoplesSpider(scrapy.Spider):
                 content += n_line
             print('content', content)
             return content
-
+        def get_author(query):
+            if response.css(query).get() is None:
+                return "Unkown Author - Japan Times"
+            else:
+                return response.css(query).get()
         yield {
             'date': response.css('div.meta-right ul li time::attr(datetime)').get(),
-            'author': response.css('div.meta-left ul li a::text').get(),
+            'author': get_author('div.meta-left ul li a::text'),
             'title': response.css('div.main div.padding_block h1::text').get(),
             'content': extract_with_css('div.entry p::text')
         }
