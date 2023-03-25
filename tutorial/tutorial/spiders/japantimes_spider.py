@@ -12,10 +12,10 @@ class PeoplesSpider(scrapy.Spider):
     name = "japan"
 
     start_urls = [
-        'https://www.japantimes.co.jp/news_category/world/'
+        'https://www.japantimes.co.jp/news_category/world/page/150/'
         ]
     
-    page = 35
+    page = 150
     start_date = '2023-01-01'
     end_date = '2023-02-28'
     def parse(self, response):
